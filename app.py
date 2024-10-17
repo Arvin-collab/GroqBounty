@@ -4,7 +4,7 @@ import base64
 from PIL import Image as PILImage
 import os
 from dotenv import load_dotenv
-import io  # Added for in-memory operations
+import io
 
 # Load environment variables from .env file
 load_dotenv()
@@ -43,10 +43,8 @@ def image_to_test_case(client, model, base64_image, prompt):
                     {"type": "text", "text": prompt},
                     {
                         "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}",
-                        },
-                    },
+                        "image_url": f"data:image/jpeg;base64,{base64_image}",
+                    }
                 ],
             }
         ],
