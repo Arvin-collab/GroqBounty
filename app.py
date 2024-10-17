@@ -4,7 +4,6 @@ import base64
 from PIL import Image as PILImage
 import os
 from dotenv import load_dotenv
-import io
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,11 +25,10 @@ def resize_image(image, max_size=(800, 800)):
         image.thumbnail(max_size)
     return image
 
-# Function to encode image to base64 from memory
-def encode_image(image):
-    buffered = io.BytesIO()
-    image.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode('utf-8')
+# Function to encode image to base64
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 
 # Function to generate website description from wireframe using Llama 3.2 Vision
 def image_to_test_case(client, model, base64_image, prompt):
@@ -43,8 +41,10 @@ def image_to_test_case(client, model, base64_image, prompt):
                     {"type": "text", "text": prompt},
                     {
                         "type": "image_url",
-                        "image_url": f"data:image/jpeg;base64,{base64_image}",
-                    }
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}",
+                        },
+                    },
                 ],
             }
         ],
@@ -85,11 +85,15 @@ if uploaded_image:
     # Resize the image if it's too large
     resized_image = resize_image(image)
     
+    # Save resized image to a temporary local directory
+    image_path = os.path.join("temp_images", uploaded_image.name)
+    resized_image.save(image_path)
+    
     # Display the uploaded image
     st.image(resized_image, caption="Uploaded Wireframe or Website Screenshot (Resized)", use_column_width=True)
     
-    # Encode the image to base64 (in-memory)
-    base64_image = encode_image(resized_image)
+    # Encode the image to base64
+    base64_image = encode_image(image_path)
     
     # Generate image description focusing on website elements (used internally, not displayed)
     description_prompt = "Describe this website or wireframe in detail, focusing on interactive elements like buttons, forms, and menus."
